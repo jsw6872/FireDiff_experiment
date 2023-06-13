@@ -8,6 +8,11 @@ def converter(file_path):
     new_json['categories'] = [
         {
             "id": 0,
+            "name": "Background",
+            "supercategory": "Background"
+        },
+        {
+            "id": 1,
             "name": "Fire",
             "supercategory": "Fire"
         }
@@ -35,27 +40,27 @@ def converter(file_path):
                 if annotation['class'] == '04':
                     annotations_info['id'] = anno_id
                     annotations_info['image_id'] = img_idx
-                    annotations_info['category_id'] = 0
+                    annotations_info['category_id'] = 1
 
                     annotations_info['bbox'] = [
-                        annotation['box'][0],
-                        annotation['box'][1],
-                        annotation['box'][2]-annotation['box'][0],
-                        annotation['box'][3]-annotation['box'][1]
+                        float(annotation['box'][0]),
+                        float(annotation['box'][1]),
+                        float(annotation['box'][2]-annotation['box'][0]), #
+                        float(annotation['box'][3]-annotation['box'][1]), #
                     ]
-                    annotations_info['area'] = annotations_info['bbox'][2]*annotations_info['bbox'][3]
-                    annotations_info['segmentation'] = []
+                    annotations_info['area'] = float((annotation['box'][2] - annotation['box'][0]) * (annotation['box'][3]- annotation['box'][1]))
+                    # annotations_info['segmentation'] = []
                     annotations_info['iscrowd'] = 0
 
                     new_json['annotations'].append(annotations_info)
                     
                     anno_id += 1
 
-    with open('./data/test/test.json', 'w') as file:
+    with open('./fire_data/train/train.json', 'w') as file:
         json.dump(new_json, file, indent=4)
 
 
 
 if __name__ == '__main__':
-    data_path = './data/test/json/'
+    data_path = './fire_data/train/json/'
     converter(data_path)

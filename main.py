@@ -2,6 +2,7 @@ import torch
 import torchvision
 from torchvision.io.image import read_image
 from torchvision.models.resnet import ResNet50_Weights
+from torchvision.models.vgg import VGG16_Weights
 from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2, FasterRCNN_ResNet50_FPN_V2_Weights, ssd300_vgg16, SSD300_VGG16_Weights
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.utils import draw_bounding_boxes
@@ -21,13 +22,14 @@ from torchvision import transforms as T
 # import transforms as T
 
 
-def get_transform(train):
-    transforms = []
+def get_transform():
+    # transforms = []
     # transforms.append(T.PILToTensor())
-    transforms.append(T.ConvertImageDtype(torch.float))
-    if train:
-        transforms.append(T.RandomHorizontalFlip(0.5))
-    return T.Compose(transforms)
+    # transforms.append(T.ConvertImageDtype(torch.float))
+    # if train:
+    #     transforms.append(T.RandomHorizontalFlip(0.5))
+    return T.Compose([T.Normalize([0.485, 0.456, 0.406],
+                                [0.229, 0.224, 0.225])])
 
 
 
@@ -44,8 +46,8 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # use our dataset and defined transformations
-    dataset = COCO_dataformat(train_img_path, train_path)
-    dataset_test = COCO_dataformat(val_img_path, val_path)
+    dataset = COCO_dataformat(train_img_path, train_path, get_transform())#, get_transform())
+    dataset_test = COCO_dataformat(val_img_path, val_path, get_transform())#, get_transform())
 
     indices = torch.randperm(len(dataset)).tolist()
 
@@ -55,28 +57,30 @@ if __name__ == '__main__':
     
 
     data_loader = torch.utils.data.DataLoader(
-                                            dataset, batch_size=16, shuffle=True, num_workers=4,
+                                            dataset, batch_size=3, shuffle=True, num_workers=6,
                                             collate_fn=utils.collate_fn)
     data_loader_test = torch.utils.data.DataLoader(
-                                                dataset_test, batch_size=4, shuffle=False, num_workers=4,
+                                                dataset_test, batch_size=4, shuffle=False, num_workers=2,
                                                 collate_fn=utils.collate_fn)
 
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = None, weights_backbone = ResNet50_Weights.IMAGENET1K_V2)#, weights_backbone = None)
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = None, num_classes=2, weights_backbone = ResNet50_Weights.IMAGENET1K_V2, trainable_backbone_layers=3)# ResNet50_Weights.IMAGENET1K_V2)#, weights_backbone = None)
     # for child in model.children():
     #     for param in child.parameters():
     #         param.requires_grad = False
     # 분류기를 새로운 것으로 교체하는데, num_classes는 사용자가 정의합니다
     
     # 분류기에서 사용할 입력 특징의 차원 정보를 얻습니다
-    in_features = model.roi_heads.box_predictor.cls_score.in_features
-    num_classes = len(coco.cats.keys())
+    # in_features = model.roi_heads.box_predictor.cls_score.in_features
+    # num_classes = len(coco.cats.keys())
+
     # 미리 학습된 모델의 머리 부분을 새로운 것으로 교체합니다
-    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+    # model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes+1)
     
     model.to(device)
+    print('model is done')
 
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.05, momentum=0.9, weight_decay=0.0001)
+    optimizer = torch.optim.SGD(params, lr=0.01, momentum=0.9, weight_decay=0.001)
     num_epochs = 20
     loss_list = []
     for epoch in range(num_epochs):
@@ -93,7 +97,7 @@ if __name__ == '__main__':
 
         best_model_wts = copy.deepcopy(model.state_dict())
         model.load_state_dict(best_model_wts)
-        torch.save(model,f'./model/pretrained_{epoch+1}.pt')
+        torch.save(model,f'./model/case5_{epoch+1}.pt')
     
     print("Done!")
 

@@ -91,8 +91,9 @@ def evaluate(model, data_loader, device):
     # n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     # torch.set_num_threads(1)
-    if device != 'cuda':
-        device = torch.device("cpu")
+
+    # if device != 'cuda':
+    #     device = torch.device("cpu")
 
     model.eval()
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, 1)
     
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cuda')
     model.to(device)
     
     coco_eval = evaluate(model, data_loader_test_coco, device)

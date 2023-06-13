@@ -79,7 +79,7 @@ class COCO_dataformat(Dataset):
         # area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         area = torch.as_tensor(area, dtype = torch.float32)
         labels = torch.as_tensor(labels, dtype=torch.int64)
-        image_id = torch.tensor([index])
+        image_id = torch.tensor(index)
         # image_id = torch.as_tensor(image_id)
         iscrowd = torch.zeros((len(anns),), dtype=torch.int64)
 
@@ -91,7 +91,7 @@ class COCO_dataformat(Dataset):
         target["iscrowd"] = iscrowd
         
         if self.transforms is not None:
-            images, target = self.transforms(images, target)
+            images = self.transforms(images)
 
         return images, target
 
@@ -111,20 +111,20 @@ class COCO_dataformat(Dataset):
         return len(self.coco.getImgIds()) # 전체 dataset의 size 반환 
 
 
-def get_transform(train):
-    transforms = []
+def get_transform():
+    # transforms = []
     # transforms.append(T.PILToTensor())
-    transforms.append(T.ConvertImageDtype(torch.float))
-    if train:
-        transforms.append(T.RandomHorizontalFlip(0.5))
-    return T.Compose(transforms)
+    # transforms.append(T.ConvertImageDtype(torch.float))
+    # if train:
+    #     transforms.append(T.RandomHorizontalFlip(0.5))
+    return T.Compose([T.Resize(680)])
 
 
 if __name__ == '__main__':
     dataset_path = '/home/work/jsw_workspace/detection/fire_data/train/' # Dataset 경로 지정 필요
     train_json_path = dataset_path + 'train.json'
     img_path = dataset_path + 'fire'
-    dataset = COCO_dataformat(img_path, train_json_path)
+    dataset = COCO_dataformat(img_path, train_json_path, get_transform())
 
     train_data_loader = torch.utils.data.DataLoader(dataset, batch_size=2, shuffle=False, num_workers=0,
                                                     collate_fn=utils.collate_fn)
