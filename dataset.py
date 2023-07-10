@@ -1,15 +1,13 @@
 import os
 from PIL import Image
-import numpy as np
-import torch
 from torch.utils.data import Dataset, DataLoader
-from pycocotools.coco import COCO
 import utils
 import cv2
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
+from torchvision import ops
 from pycocotools.coco import COCO
 import matplotlib.pyplot as plt
 from torchvision import transforms as T
@@ -18,6 +16,7 @@ from torchvision import transforms as T
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+
 
 class COCO_dataformat(Dataset):
     def __init__(self, img_path, data_dir, transforms=None):
@@ -84,14 +83,17 @@ class COCO_dataformat(Dataset):
         
         class_labels = ['fire' for _ in range(len(target['labels']))]
         if self.transforms is not None:
-            transformed = self.transforms(image=images_copy, bboxes=coco_bboxes, class_labels = class_labels)
-            target["boxes"] = transformed["bboxes"]
+            transformed = self.transforms(image=images_copy, bboxes=coco_bboxes, class_labels=class_labels)
+            
+            target["boxes"] = ops.box_convert(torch.tensor([list(box) for box in transformed["bboxes"]]).float(), 'xywh', 'xyxy')
+
             images = transformed["image"]
-            images = np.transpose(images,(0,1,2))
+            images = np.transpose(images, (0, 1, 2))
         else:
-            images = images_copy.transpose(2,0,1).copy()
-        images /= 255.0 # albumentations 라이브러리로 toTensor 사용시 normalize 안해줘서 미리 해줘야~
-        images = torch.tensor(images)
+            images = images_copy.transpose(2, 0, 1).copy()
+        images /= 255.0  # albumentations 라이브러리로 toTensor 사용시 normalize 안해줘서 미리 해줘야함
+        # images = torch.tensor(images)
+        images = images.detach().clone()
             
         return images, target
 
@@ -108,7 +110,7 @@ class COCO_dataformat(Dataset):
         #     return images, image_infos
 
     def __len__(self):
-        return len(self.coco.getImgIds()) # 전체 dataset의 size 반환 
+        return len(self.coco.getImgIds())  # 전체 dataset의 size 반환
 
 
 def get_transform():
@@ -132,7 +134,7 @@ def get_transform():
 
 
 if __name__ == '__main__':
-    dataset_path = '/home/work/jsw_workspace/detection/fire_data/train/' # Dataset 경로 지정 필요
+    dataset_path = '/home/yongchoooon/workspace/seongwoo/FireDiff_experiment/data/train/'  # Dataset 경로 지정 필요
     train_json_path = dataset_path + 'train.json'
     img_path = dataset_path + 'fire'
     dataset = COCO_dataformat(img_path, train_json_path, get_transform())
@@ -142,4 +144,5 @@ if __name__ == '__main__':
 
     batch = iter(train_data_loader)
     img, target = next(batch)
-    print(True)
+
+    print(target)

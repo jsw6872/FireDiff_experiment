@@ -44,9 +44,9 @@ def get_transform():
     return transforms
 
 
-
 if __name__ == '__main__':
-    dataset_path = '/home/work/jsw_workspace/detection/fire_data/' # Dataset 경로 지정 필요
+    # dataset_path = '/home/work/jsw_workspace/detection/fire_data/' # Dataset 경로 지정 필요
+    dataset_path = './data/'  # Dataset 경로 지정 필요
     train_path = dataset_path + 'train/train.json'
     val_path = dataset_path + 'test/test.json'
 

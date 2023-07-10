@@ -134,19 +134,19 @@ def evaluate(model, data_loader, device):
 
 
 if __name__ == '__main__':
-    dataset_path = '/home/work/jsw_workspace/detection/fire_data/train/' # Dataset 경로 지정 필요
+    dataset_path = '/home/yongchoooon/workspace/seongwoo/FireDiff_experiment/data/train/' # Dataset 경로 지정 필요
     train_json_path = dataset_path + 'train.json'
     img_path = dataset_path + 'fire'
-    dataset = COCO_dataformat(img_path, train_json_path)
+    dataset = COCO_dataformat(img_path, train_json_path, get_transform())
 
     data_loader_test_coco = torch.utils.data.DataLoader(
                                             dataset, batch_size=1, shuffle=False, num_workers=0,
                                             collate_fn=utils.collate_fn)
 
-    coco = get_coco_api_from_dataset(data_loader_test_coco.dataset)
+    # coco = get_coco_api_from_dataset(data_loader_test_coco.dataset)
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights="DEFAULT")
     in_features = model.roi_heads.box_predictor.cls_score.in_features
-    model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, 1)
+    model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, 2)
     
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cuda')
     model.to(device)
