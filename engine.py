@@ -7,7 +7,7 @@ import torchvision.models.detection.mask_rcnn
 import utils
 from coco_eval import CocoEvaluator
 from coco_utils import get_coco_api_from_dataset
-from dataset import COCO_dataformat, get_transform
+from dataset import COCO_dataformat, get_valid_transform
 
 import numpy as np
 import pandas as pd
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     dataset_path = '/home/yongchoooon/workspace/seongwoo/FireDiff_experiment/data/train/' # Dataset 경로 지정 필요
     train_json_path = dataset_path + 'train.json'
     img_path = dataset_path + 'fire'
-    dataset = COCO_dataformat(img_path, train_json_path, get_transform())
+    dataset = COCO_dataformat(img_path, train_json_path, get_valid_transform())
 
     data_loader_test_coco = torch.utils.data.DataLoader(
                                             dataset, batch_size=1, shuffle=False, num_workers=0,

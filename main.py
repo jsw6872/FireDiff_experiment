@@ -7,7 +7,7 @@ from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2, FasterRCNN_
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.utils import draw_bounding_boxes
 from torchvision.transforms.functional import to_pil_image
-from dataset import COCO_dataformat
+from dataset import COCO_dataformat, get_train_transform, get_valid_transform
 
 import engine
 from pycocotools.coco import COCO
@@ -24,24 +24,24 @@ from torchvision import transforms as T
 # import transforms as T
 
 
-def get_transform():
-    # transforms = []
-    # transforms.append(T.PILToTensor())
-    # transforms.append(T.ConvertImageDtype(torch.float))
+# def get_transform():
+#     # transforms = []
+#     # transforms.append(T.PILToTensor())
+#     # transforms.append(T.ConvertImageDtype(torch.float))
     
-        # transforms.append(T.RandomHorizontalFlip(0.5))
-    mean1 = [90, 100, 100]
-    std1 = [30, 32, 28]
-    mean2 = [mean1[0]/255, mean1[1]/255, mean1[2]/255]
-    std2 = [std1[0]/255, std1[1]/255, std1[2]/255]
+#         # transforms.append(T.RandomHorizontalFlip(0.5))
+#     mean1 = [90, 100, 100]
+#     std1 = [30, 32, 28]
+#     mean2 = [mean1[0]/255, mean1[1]/255, mean1[2]/255]
+#     std2 = [std1[0]/255, std1[1]/255, std1[2]/255]
     
-    transforms = A.Compose([
-                            A.Normalize(mean=mean2, std=std2, max_pixel_value=255),
-                            A.HorizontalFlip(p=0.5),
-                            A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
-                            ToTensorV2(),
-                        ], bbox_params=A.BboxParams(format='coco', label_fields=['class_labels']))
-    return transforms
+#     transforms = A.Compose([
+#                             A.Normalize(mean=mean2, std=std2, max_pixel_value=255),
+#                             A.HorizontalFlip(p=0.5),
+#                             A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+#                             ToTensorV2(),
+#                         ], bbox_params=A.BboxParams(format='coco', label_fields=['class_labels']))
+#     return transforms
 
 
 if __name__ == '__main__':
@@ -58,24 +58,19 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # use our dataset and defined transformations
-    dataset = COCO_dataformat(train_img_path, train_path, get_transform())#, get_transform())
-    dataset_test = COCO_dataformat(val_img_path, val_path)#, get_transform())
+    dataset = COCO_dataformat(train_img_path, train_path, get_train_transform())#, get_transform())
+    dataset_test = COCO_dataformat(val_img_path, val_path, get_valid_transform())#, get_transform())
 
     indices = torch.randperm(len(dataset)).tolist()
 
-    # dataset = torch.utils.data.Subset(dataset, indices[:-400])
-    # dataset_test = torch.utils.data.Subset(dataset_test, indices[-400:])
-
-    
-
     data_loader = torch.utils.data.DataLoader(
-                                            dataset, batch_size=4, shuffle=True, num_workers=6,
+                                            dataset, batch_size=8, shuffle=True, num_workers=8,
                                             collate_fn=utils.collate_fn)
     data_loader_test = torch.utils.data.DataLoader(
-                                                dataset_test, batch_size=4, shuffle=False, num_workers=2,
+                                                dataset_test, batch_size=4, shuffle=False, num_workers=4,
                                                 collate_fn=utils.collate_fn)
 
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = None, num_classes=2, weights_backbone = ResNet50_Weights.IMAGENET1K_V2, trainable_backbone_layers=2)# ResNet50_Weights.IMAGENET1K_V2)#, weights_backbone = None)
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = None, num_classes=2, weights_backbone = ResNet50_Weights.IMAGENET1K_V2, trainable_backbone_layers=3)# ResNet50_Weights.IMAGENET1K_V2)#, weights_backbone = None)
     # for child in model.children():
     #     for param in child.parameters():
     #         param.requires_grad = False
