@@ -85,16 +85,15 @@ class COCO_dataformat(Dataset):
 
         if self.transforms:
             transformed = self.transforms(image=images_copy, bboxes=target['coco_boxes'], labels=labels)
-            
-            # target["boxes"] = ops.box_convert(torch.tensor([list(box) for box in transformed["bboxes"]]).float(), 'xywh', 'xyxy')
-            target["boxes"] = ops.box_convert(torch.as_tensor(transformed['bboxes'], dtype = torch.float32), 'xywh', 'xyxy')
-
+        
+            if len(transformed['bboxes']) > 0:
+                target["boxes"] = ops.box_convert(torch.as_tensor(transformed['bboxes'], dtype = torch.float32), 'xywh', 'xyxy')
+            else:
+                target["boxes"] = torch.zeros((0,4),dtype=torch.float32)
             images = transformed["image"]
             images = np.transpose(images, (0, 1, 2))
-        # else:
-        #     images = images_copy.transpose(2, 0, 1)
-        #     images = torch.tensor(images)
-        images /= 255.0    
+        
+        images /= 255.0
 
         return images, target
 
@@ -108,9 +107,10 @@ def get_train_transform():
     mean2 = [mean1[0]/255, mean1[1]/255, mean1[2]/255]
     std2 = [std1[0]/255, std1[1]/255, std1[2]/255]
     
-    transforms = A.Compose([
-                            A.HorizontalFlip(p=0.5),
-                            A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+    transforms = A.Compose([A.Resize(512,512),
+                            #A.HorizontalFlip(p=0.5),
+                            #A.ColorJitter(brightness=0.2, contrast=0, saturation=0.2, p=0.3),
+                            #A.GaussNoise(var_limit=(5, 15), p=0.3),
                             # A.Normalize(), #A.Normalize(mean=mean2, std=std2, max_pixel_value=255),
                             ToTensorV2(),
                         ], bbox_params=A.BboxParams(format='coco', label_fields=['labels']))
@@ -118,7 +118,7 @@ def get_train_transform():
 
 
 def get_valid_transform():
-    transforms = A.Compose([
+    transforms = A.Compose([A.Resize(512,512),
                             ToTensorV2(),
                         ], bbox_params=A.BboxParams(format='coco', label_fields=['labels']))
 
@@ -128,6 +128,7 @@ def get_valid_transform():
 if __name__ == '__main__':
     dataset_path = '/home/yongchoooon/workspace/seongwoo/FireDiff_experiment/data/train/'  # Dataset 경로 지정 필요
     train_json_path = dataset_path + 'train.json'
+
     img_path = dataset_path + 'fire'
     dataset = COCO_dataformat(img_path, train_json_path, get_train_transform())
 
