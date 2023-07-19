@@ -108,9 +108,9 @@ def get_train_transform():
     std2 = [std1[0]/255, std1[1]/255, std1[2]/255]
     
     transforms = A.Compose([A.Resize(512,512),
-                            #A.HorizontalFlip(p=0.5),
-                            #A.ColorJitter(brightness=0.2, contrast=0, saturation=0.2, p=0.3),
-                            #A.GaussNoise(var_limit=(5, 15), p=0.3),
+                            A.HorizontalFlip(p=0.5),
+                            A.ColorJitter(brightness=0.2, contrast=0, saturation=0.2, p=0.2),
+                            A.GaussNoise(var_limit=(5, 15), p=0.2),
                             # A.Normalize(), #A.Normalize(mean=mean2, std=std2, max_pixel_value=255),
                             ToTensorV2(),
                         ], bbox_params=A.BboxParams(format='coco', label_fields=['labels']))

@@ -45,12 +45,14 @@ from torchvision import transforms as T
 
 
 if __name__ == '__main__':
-    # dataset_path = '/home/work/jsw_workspace/detection/fire_data/' # Dataset 경로 지정 필요
     dataset_path = './data/'  # Dataset 경로 지정 필요
-    train_path = dataset_path + 'train/train.json'
+    # train_path = dataset_path + 'train/train.json'
+    train_path = '/home/yongchoooon/workspace/diffusers/examples/text_to_image/inference/blip_train.json'
+
     val_path = dataset_path + 'test/test.json'
 
-    train_img_path = dataset_path + 'train/fire'
+    # train_img_path = dataset_path + 'train/fire'
+    train_img_path = '/home/yongchoooon/workspace/diffusers/examples/text_to_image/inference'
     val_img_path = dataset_path + 'test/fire'
     
     coco = COCO(train_path)
@@ -58,19 +60,21 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # use our dataset and defined transformations
-    dataset = COCO_dataformat(train_img_path, train_path, get_train_transform())#, get_transform())
-    dataset_test = COCO_dataformat(val_img_path, val_path, get_valid_transform())#, get_transform())
+    dataset = COCO_dataformat(train_img_path, train_path, get_train_transform())
+    dataset_test = COCO_dataformat(val_img_path, val_path, get_valid_transform())
 
-    indices = torch.randperm(len(dataset)).tolist()
+    indices = [i for i in range(len(dataset))]
+    dataset_valid = torch.utils.data.Subset(dataset_test, indices[:580])
+    dataset_test = torch.utils.data.Subset(dataset_test, indices[580:])
 
     data_loader = torch.utils.data.DataLoader(
                                             dataset, batch_size=8, shuffle=True, num_workers=8,
                                             collate_fn=utils.collate_fn)
-    data_loader_test = torch.utils.data.DataLoader(
-                                                dataset_test, batch_size=4, shuffle=False, num_workers=4,
+    data_loader_valid = torch.utils.data.DataLoader(
+                                                dataset_valid, batch_size=4, shuffle=False, num_workers=4,
                                                 collate_fn=utils.collate_fn)
 
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = None, num_classes=2, weights_backbone = ResNet50_Weights.IMAGENET1K_V2, trainable_backbone_layers=3)# ResNet50_Weights.IMAGENET1K_V2)#, weights_backbone = None)
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = None, num_classes=2, weights_backbone = ResNet50_Weights.IMAGENET1K_V2, trainable_backbone_layers=2)# ResNet50_Weights.IMAGENET1K_V2)#, weights_backbone = None)
     # for child in model.children():
     #     for param in child.parameters():
     #         param.requires_grad = False
@@ -87,8 +91,8 @@ if __name__ == '__main__':
     print('model is done')
 
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.05, momentum=0.9, weight_decay=0.0001)
-    num_epochs = 20
+    optimizer = torch.optim.SGD(params, lr=0.05, momentum=0.9, weight_decay=0.0005)
+    num_epochs = 25
     loss_list = []
     for epoch in range(num_epochs):
     # train for one epoch, printing every 10 iterations
@@ -100,11 +104,11 @@ if __name__ == '__main__':
         #     best_model_wts = copy.deepcopy(model.state_dict())
         # evaluate on the test dataset
         print(f'---------{epoch+1}epoch evaluation---------')
-        evaluation = engine.evaluate(model, data_loader_test, device=device)
+        evaluation = engine.evaluate(model, data_loader_valid, device=device)
 
         best_model_wts = copy.deepcopy(model.state_dict())
         model.load_state_dict(best_model_wts)
-        torch.save(model,f'./model/aug_{epoch+1}.pt')
+        torch.save(model,f'./model/blip_aug_{epoch+1}.pt')
     
     print("Done!")
 

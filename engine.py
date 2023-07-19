@@ -134,24 +134,29 @@ def evaluate(model, data_loader, device):
 
 
 if __name__ == '__main__':
-    dataset_path = '/home/yongchoooon/workspace/seongwoo/FireDiff_experiment/data/train/' # Dataset 경로 지정 필요
-    train_json_path = dataset_path + 'train.json'
+    dataset_path = '/home/yongchoooon/workspace/seongwoo/FireDiff_experiment/data/test/' # Dataset 경로 지정 필요
+    test_json_path = dataset_path + 'test.json'
     img_path = dataset_path + 'fire'
-    dataset = COCO_dataformat(img_path, train_json_path, get_valid_transform())
+    dataset = COCO_dataformat(img_path, test_json_path, get_valid_transform())
+
+    indices = [i for i in range(len(dataset))]
+    dataset_test = torch.utils.data.Subset(dataset, indices[580:])
 
     data_loader_test_coco = torch.utils.data.DataLoader(
-                                            dataset, batch_size=1, shuffle=False, num_workers=0,
+                                            dataset_test, batch_size=4, shuffle=False, num_workers=4,
                                             collate_fn=utils.collate_fn)
 
     # coco = get_coco_api_from_dataset(data_loader_test_coco.dataset)
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights="DEFAULT")
-    in_features = model.roi_heads.box_predictor.cls_score.in_features
-    model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, 2)
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cuda')
+    model = torch.load('./model/augv3_23_best.pt')
+    # model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights="DEFAULT")
+    # in_features = model.roi_heads.box_predictor.cls_score.in_features
+    # model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, 2)
+    
     model.to(device)
     
     coco_eval = evaluate(model, data_loader_test_coco, device)
-    print(True)
+    
     # iou_types = _get_iou_types(model)
     # coco_evaluator = CocoEvaluator(coco, iou_types)
