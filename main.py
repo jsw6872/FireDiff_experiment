@@ -47,7 +47,7 @@ from torchvision import transforms as T
 if __name__ == '__main__':
     dataset_path = './data/'  # Dataset 경로 지정 필요
     # train_path = dataset_path + 'train/train.json'
-    train_path = '/home/yongchoooon/workspace/diffusers/examples/text_to_image/inference/blip_train.json'
+    train_path = '/home/yongchoooon/workspace/diffusers/examples/text_to_image/inference/gpt_train.json'
 
     val_path = dataset_path + 'test/test.json'
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
         best_model_wts = copy.deepcopy(model.state_dict())
         model.load_state_dict(best_model_wts)
-        torch.save(model,f'./model/blip_aug_{epoch+1}.pt')
+        torch.save(model,f'./model/gpt_{epoch+1}.pt')
     
     print("Done!")
 
