@@ -2,7 +2,7 @@ import json
 import os
 from tqdm import tqdm
 
-def converter(json_list):
+def converter(json_list, save_file_name):
     coco_dict = {}
     coco_dict['images'] = []
     coco_dict['categories'] = [
@@ -40,17 +40,18 @@ def converter(json_list):
 
                 image_id += 1
 
-    with open('./data/train/total_train.json', 'w') as file:
+    with open(f'./data/train/{save_file_name}', 'w') as file:
         json.dump(coco_dict, file, indent=4)
 
 
 if __name__ == '__main__':
     file_path = './data/train/'
-    integrated_list = [f'{file_path}sd14-lora-fire-aihub-new-blip-best-1-annotations.json',
-                    f'{file_path}sd14-lora-fire-aihub-new-chatgpt-annotations.json', 
-                    f'{file_path}fire_train.json']
+    integrated_list = [f'{file_path}sd14-lora-fire-aihub-new-chatgpt-annotations.json', 
+                       f'{file_path}fire_train.json']
     
-    converter(integrated_list)
+    save_file_name = 'origin_gpt_train'+'.json'
+    
+    converter(integrated_list, save_file_name)
 
 
 
