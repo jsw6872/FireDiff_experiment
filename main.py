@@ -46,13 +46,13 @@ from torchvision import transforms as T
 
 if __name__ == '__main__':
     dataset_path = './data/'  # Dataset 경로 지정 필요
-    # train_path = dataset_path + 'train/train.json'
-    train_path = '/home/yongchoooon/workspace/diffusers/examples/text_to_image/inference/gpt_train.json'
+    train_path = dataset_path + 'train/origin_controlnet_train.json'
+    # train_path = '/home/yongchoooon/workspace/diffusers/examples/text_to_image/inference/origin_gpt_train.json'
 
     val_path = dataset_path + 'test/test.json'
 
-    # train_img_path = dataset_path + 'train/fire'
-    train_img_path = '/home/yongchoooon/workspace/diffusers/examples/text_to_image/inference'
+    train_img_path = dataset_path + 'train'
+    # train_img_path = '/home/yongchoooon/workspace/diffusers/examples/text_to_image/inference'
     val_img_path = dataset_path + 'test/fire'
     
     coco = COCO(train_path)
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     dataset_test = torch.utils.data.Subset(dataset_test, indices[580:])
 
     data_loader = torch.utils.data.DataLoader(
-                                            dataset, batch_size=8, shuffle=True, num_workers=8,
+                                            dataset, batch_size=16, shuffle=True, num_workers=8,
                                             collate_fn=utils.collate_fn)
     data_loader_valid = torch.utils.data.DataLoader(
                                                 dataset_valid, batch_size=4, shuffle=False, num_workers=4,
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
         best_model_wts = copy.deepcopy(model.state_dict())
         model.load_state_dict(best_model_wts)
-        torch.save(model,f'./model/gpt_{epoch+1}.pt')
+        torch.save(model,f'./model/origin_controlnet_{epoch+1}.pt')
     
     print("Done!")
 

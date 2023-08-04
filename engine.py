@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 import copy
 
+torch.multiprocessing.set_sharing_strategy('file_system')
+
 def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -29,7 +31,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
         #     optimizer, start_factor=warmup_factor, total_iters=warmup_iters
         # )
 
-    for images, targets in metric_logger.log_every(data_loader, print_freq, header):
+    for _, images, targets in metric_logger.log_every(data_loader, print_freq, header):
         images = list(image.to(device) for image in images)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
@@ -103,7 +105,7 @@ def evaluate(model, data_loader, device):
     iou_types = _get_iou_types(model)
     coco_evaluator = CocoEvaluator(coco, iou_types)
 
-    for images, targets in metric_logger.log_every(data_loader, 100, header):
+    for _, images, targets in metric_logger.log_every(data_loader, 100, header):
         images = list(img.to(device) for img in images)
 
         if torch.cuda.is_available():

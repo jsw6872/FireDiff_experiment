@@ -95,7 +95,7 @@ class COCO_dataformat(Dataset):
         
         images /= 255.0
 
-        return images, target
+        return image_infos['file_name'], images, target
 
     def __len__(self):
         return len(self.coco.getImgIds())  # 전체 dataset의 size 반환
@@ -136,6 +136,6 @@ if __name__ == '__main__':
                                                     collate_fn=utils.collate_fn)
 
     batch = iter(train_data_loader)
-    img, target = next(batch)
+    _, img, target = next(batch)
 
     print(target)
